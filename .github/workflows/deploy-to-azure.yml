@@ -1,0 +1,36 @@
+name: deploy-to-azure
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - README.md
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout GitHub Action"
+        uses: actions/checkout@v3
+
+      - name: Setup Node 18.x Environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies and build
+        shell: bash
+        run: |
+          npm ci # install dependencies
+          npm run build
+
+      - name: "Run Azure Functions Action"
+        uses: Azure/functions-action@v1
+        id: fa
+        with:
+          app-name: "actions-demo"
+          slot-name: "Production"
+          package: "."
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
